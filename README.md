@@ -11,6 +11,7 @@ Get /services 🡢 La route de présentation des services.
 
 ### Arborescence
 
+```
 cloud_computing/
 ├── README.md
 ├── .env
@@ -30,6 +31,7 @@ cloud_computing/
 │   ├── variables.tf
 │   ├── outputs.tf
 └── rapport.pdf
+```
 
 ### Rôle des répertoires
 
