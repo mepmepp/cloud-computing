@@ -90,3 +90,5 @@ Ensuite, toujours à la racine du projet, on peut directement lancer l'architect
 ```bash
 ./ansible/deploy.sh
 ```
+
+Au bout de quelques minutes, l'API sera disponible à l'adresse indiquée dans le dernier output.
