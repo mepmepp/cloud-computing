@@ -1,0 +1,131 @@
+---
+- name: Deploy Python API Backend
+  hosts: api_server
+  become: true
+  vars_files:
+    - vars.yml
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart api
+      systemd:
+        name: "{{ app_name }}"
+        state: restarted
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install system dependencies
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - python3-dev
+          - build-essential
+        state: present
+
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        system: yes
+        shell: /bin/bash
+        home: "{{ app_dir }}"
+        create_home: yes
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: "0755"
+
+    - name: Copy application files to VM
+      synchronize:
+        src: "{{ local_project_path }}/"
+        dest: "{{ app_dir }}/"
+        delete: yes
+        rsync_opts:
+          - "--exclude=.venv"
+          - "--exclude=__pycache__"
+          - "--exclude=*.pyc"
+          - "--exclude=.git"
+          - "--exclude=.gitignore"
+      notify: restart api
+
+    - name: Set ownership of application files
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
+
+    - name: Create Python virtual environment
+      become_user: "{{ app_user }}"
+      command:
+        cmd: "{{ python_version }} -m venv {{ app_dir }}/.venv"
+        creates: "{{ app_dir }}/.venv/bin/activate"
+
+    - name: Install Python dependencies from requirements.txt
+      become_user: "{{ app_user }}"
+      pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ app_dir }}/.venv"
+        state: present
+      notify: restart api
+
+    - name: Deploy systemd service file
+      copy:
+        dest: "/etc/systemd/system/{{ app_name }}.service"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [Unit]
+          Description={{ app_name }} - Python API Backend
+          After=network.target
+
+          [Service]
+          Type=simple
+          User={{ app_user }}
+          Group={{ app_user }}
+          WorkingDirectory={{ app_dir }}
+          Environment="PATH={{ app_dir }}/.venv/bin"
+          Environment="APP_PORT={{ app_port }}"
+          Environment="DB_SERVER={{ lookup('env', 'DB_SERVER') }}"
+          Environment="DB_NAME={{ lookup('env', 'DB_NAME') }}"
+          Environment="DB_USER={{ lookup('env', 'DB_USER') }}"
+          Environment="DB_PASSWORD={{ lookup('env', 'DB_PASSWORD') }}"
+          ExecStart={{ app_dir }}/.venv/bin/python app.py
+
+          Restart=on-failure
+          RestartSec=5s
+          StandardOutput=journal
+          StandardError=journal
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - reload systemd
+        - restart api
+
+    - name: Enable and start API service
+      systemd:
+        name: "{{ app_name }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Wait for API to be reachable
+      wait_for:
+        host: "0.0.0.0"
+        port: "{{ app_port }}"
+        timeout: 30
+        state: started

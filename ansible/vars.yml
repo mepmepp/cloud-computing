@@ -1,0 +1,12 @@
+---
+# Application
+app_name: api-backend
+app_user: "{{ lookup('env', 'APP_USER') }}"
+app_dir: /opt/api
+app_port: "{{ lookup('env', 'APP_PORT') }}"
+
+# Python
+python_version: python3
+
+# Projet local path (relatif au playbook)
+local_project_path: ../project
