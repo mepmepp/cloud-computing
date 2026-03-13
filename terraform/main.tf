@@ -14,6 +14,7 @@ terraform {
 }
 
 provider "azurerm" {
+  storage_use_azuread = true
   features {}
 }
 
@@ -187,10 +188,13 @@ resource "azurerm_storage_account" "main" {
   min_tls_version = "TLS1_2"
 
   # Désactiver les clés d'accès partagées (optionnel, si vous utilisez uniquement Azure AD)
-  # shared_access_key_enabled = false
+
+  shared_access_key_enabled       = true
+  public_network_access_enabled   = true
+
 
   network_rules {
-    default_action             = "Deny"  # Bloquer tout par défaut
+    default_action             = "Allow"
     bypass                     = ["AzureServices"]
     ip_rules                   = [var.my_ip_address]  # Autoriser votre IP
     virtual_network_subnet_ids = [azurerm_subnet.internal.id]  # Autoriser le subnet de la VM
