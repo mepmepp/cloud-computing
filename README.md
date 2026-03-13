@@ -5,13 +5,14 @@ Application Flask minimaliste avec deux routes.
 Endpoints :
 
 Get / 🡢 La route d'accueil.
+
 Get /services 🡢 La route de présentation des services.
 
 ## Structure du projet
 
 ### Arborescence
 
-```
+```text
 cloud_computing/
 ├── README.md
 ├── .env
@@ -55,7 +56,7 @@ Il faut obligatoirement modifier *MY_IP* et *SSH_KEY_PATH*.
 **Pour récupérer son adresse ip :**
 
 ```bash
-curl curl https://api.ipify.org
+curl https://api.ipify.org
 ```
 
 /!\ En cas de changement d'IP, une erreur 403 surviendra pendant le déploiement.
@@ -82,9 +83,9 @@ az login
 
 Et suivre les instructions d'Azure.
 
-### Lancement du déploiement
+### Mise en place de l'architecture et lancement du déploiement
 
-Ensuite, on peut directement lancer le déploiement avec la commande suivante, à la racine du projet.
+Ensuite, toujours à la racine du projet, on peut directement lancer l'architecture et le déploiement avec la commande suivante.
 
 ```bash
 ./ansible/deploy.sh
