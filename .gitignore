@@ -1,0 +1,7 @@
+.env
+.venv/
+.terraform*
+*.tfstate
+*.tfstate.backup
+*lock*
+.odt
